@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="blink_blob_bg_color">#EEEEEE</color>
+    <color name="google_blue">#4285F3</color>
+    <color name="google_red">#EA4336</color>
+    <color name="google_yellow">#FBBB06</color>
+    <color name="google_green">#34A853</color>
+
+    <array name="assist_dots">
+        <item>@color/google_blue</item>
+        <item>@color/google_red</item>
+        <item>@color/google_yellow</item>
+        <item>@color/google_green</item>
+    </array>
+</resources>

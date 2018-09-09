@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="blink_width">250dp</dimen>
+    <dimen name="blink_height">72dp</dimen>
+    <dimen name="quickstep_home_width">18dp</dimen>
+    <dimen name="quickstep_home_height">10dp</dimen>
+    <dimen name="assistant_dot_radius">3dp</dimen>
+    <dimen name="assistant_dot_gap">6dp</dimen>
+</resources>
