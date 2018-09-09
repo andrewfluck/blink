@@ -12,14 +12,22 @@ import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.animation.OvershootInterpolator;
-import android.widget.RelativeLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.andrewfluck.blink.R;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-public class BlinkView extends RelativeLayout {
+public class BlinkView extends LinearLayout {
     private final String TAG = BlinkView.class.getSimpleName();
 
     private boolean mOpen;
@@ -39,8 +47,8 @@ public class BlinkView extends RelativeLayout {
     private float mBlinkHalfWidth;
     private float mBlinkHalfHeight;
 
-    private float mQuickstepHomeWidth;
-    private float mQuickstepHomeHeight;
+    private int mQuickstepHomeWidth;
+    private int mQuickstepHomeHeight;
     private float mAssistantDotRadius;
     private float mAssistantDotGap;
 
@@ -52,6 +60,14 @@ public class BlinkView extends RelativeLayout {
     private Paint mBlinkBackground;
     private Paint mQuickstepHomeFill;
     private Vibrator mVibrator;
+
+    private enum Actions {
+        BACK,
+        HOME,
+        RECENTS
+    }
+
+    private final List<Actions> mActions = new ArrayList<>();
 
     public BlinkView(Context context) {
         super(context);
@@ -69,6 +85,8 @@ public class BlinkView extends RelativeLayout {
     }
 
     private void init(Context context) {
+        setOrientation(LinearLayout.HORIZONTAL);
+
         mOpen = false;
 
         mContext = context;
@@ -91,8 +109,8 @@ public class BlinkView extends RelativeLayout {
         mOffsetY = mBlinkHeight;
 
         /* Quickstep home dimensions */
-        mQuickstepHomeWidth = mResources.getDimension(R.dimen.quickstep_home_width);
-        mQuickstepHomeHeight = mResources.getDimension(R.dimen.quickstep_home_height);
+        mQuickstepHomeWidth = mResources.getDimensionPixelSize(R.dimen.quickstep_home_width);
+        mQuickstepHomeHeight = mResources.getDimensionPixelSize(R.dimen.quickstep_home_height);
         mAssistantDotRadius = mResources.getDimension(R.dimen.assistant_dot_radius);
         mAssistantDotGap = mResources.getDimension(R.dimen.assistant_dot_gap);
 
@@ -113,6 +131,47 @@ public class BlinkView extends RelativeLayout {
     }
 
     @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        mActions.add(Actions.HOME);
+        mActions.add(Actions.RECENTS);
+        mActions.add(Actions.BACK);
+
+        int N = mActions.size();
+        float weightSum = 1f;// / N;
+
+        for (int i = 0; i < N; i++) {
+            Actions action = mActions.get(i);
+            ImageView imageView = new ImageView(getContext());
+            imageView.setTag(action);
+
+            int drawableResId = 0;
+            switch (action) {
+                case BACK:
+                    drawableResId = R.drawable.ic_sysbar_back_button;
+                    break;
+                case RECENTS:
+                    drawableResId = R.drawable.ic_sysbar_back_button;
+                    break;
+                case HOME:
+                    drawableResId = R.drawable.ic_sysbar_rotate_button;
+                    break;
+            }
+
+            imageView.setImageResource(drawableResId);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LayoutParams.WRAP_CONTENT,
+                    LayoutParams.WRAP_CONTENT
+            );
+            android.util.Log.e("ANAS","weightSum="+weightSum);
+            lp.weight = weightSum;
+            lp.gravity = Gravity.BOTTOM;
+            addView(imageView, lp);
+        }
+    }
+
+    @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
@@ -121,7 +180,7 @@ public class BlinkView extends RelativeLayout {
     }
 
     private void drawBlinkBlob(Canvas canvas, float offsetX, float offsetY) {
-        final float blinkOffsetX = offsetX * 0.3f;
+        final float blinkOffsetX = offsetX;// * 0.5f;
         final float blinkOffsetY = offsetY * 1.0f;
         final float qsOffsetX = offsetX * 0.25f;
         final float qsOffsetY = offsetY * 0.3f;
@@ -135,29 +194,15 @@ public class BlinkView extends RelativeLayout {
         mBlinkPath.cubicTo(fourthWidth + blinkOffsetX, blinkOffsetY, fourthWidth + blinkOffsetX, mBlinkHeight, mBlinkHalfWidth, mBlinkHeight);
         mBlinkPath.close();
 
-        int state;
+        int alpha = (int) clamp(100 - threshold, 0, 100);
+        int N = getChildCount();
+        for (int i = 0; i < N; i++) {
+            View child = getChildAt(i);
+            child.setAlpha(alpha);
+        }
 
         canvas.clipPath(mBlinkPath);
         canvas.drawPath(mBlinkPath, mBlinkBackground);
-
-        state = canvas.save();
-        mQuickstepHomeFill.setAlpha((int) clamp(100 - threshold, 0, 100));
-        canvas.drawLine(-(mQuickstepHomeWidth / 2) + qsOffsetX, mBlinkHalfHeight + qsOffsetY, (mQuickstepHomeWidth / 2) + qsOffsetX, mBlinkHalfHeight + qsOffsetY, mQuickstepHomeFill);
-        canvas.restoreToCount(state);
-
-        state = canvas.save();
-        mBackDrawable.setBounds(0, 0, mBackDrawable.getIntrinsicWidth(), mBackDrawable.getIntrinsicHeight());
-        mBackDrawable.setAlpha((int) clamp(threshold, 0, 100));
-        canvas.translate(-(mBackDrawable.getIntrinsicWidth() / 2) + qsOffsetX, -(mBackDrawable.getIntrinsicHeight() / 2) + mBlinkHalfHeight + qsOffsetY);
-        mBackDrawable.draw(canvas);
-        canvas.restoreToCount(state);
-
-        state = canvas.save();
-        mRotateDrawable.setBounds(0, 0, mBackDrawable.getIntrinsicWidth(), mBackDrawable.getIntrinsicHeight());
-        mRotateDrawable.setAlpha((int) clamp(threshold, 0, 100));
-        canvas.translate(-(mRotateDrawable.getIntrinsicWidth() / 2) + qsOffsetX, -(mRotateDrawable.getIntrinsicHeight() / 2) + mBlinkHalfHeight + qsOffsetY);
-        mRotateDrawable.draw(canvas);
-        canvas.restoreToCount(state);
 
 //        for (int i = 0; mBlinkAssistantColorsResId.length > i; i++) {
 //            Paint dotPaint = new Paint();
@@ -182,8 +227,10 @@ public class BlinkView extends RelativeLayout {
             return;
         }
 
+        int state = canvas.save();
         canvas.translate(mViewWidth / 2, 0);
         drawBlinkBlob(canvas, mOffsetX, mOffsetY);
+        canvas.restoreToCount(state);
     }
 
     public boolean onTouchEvent(MotionEvent event) {
@@ -215,7 +262,6 @@ public class BlinkView extends RelativeLayout {
 
                 float newOffsetX = event.getX() - (mViewWidth / 2);
                 float newOffsetY = event.getY();
-
 
 
                 if (newOffsetY <= (mViewHeight - mBlinkHeight)) {
