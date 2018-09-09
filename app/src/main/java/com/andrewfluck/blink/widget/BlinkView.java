@@ -133,6 +133,7 @@ public class BlinkView extends LinearLayout {
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
+        setPadding((int)  mBlinkHalfWidth, 0, (int) mBlinkHalfWidth, 0);
 
         mActions.add(Actions.HOME);
         mActions.add(Actions.RECENTS);
@@ -152,7 +153,7 @@ public class BlinkView extends LinearLayout {
                     drawableResId = R.drawable.ic_sysbar_back_button;
                     break;
                 case RECENTS:
-                    drawableResId = R.drawable.ic_sysbar_back_button;
+                    drawableResId = R.drawable.ic_sysbar_home_button;
                     break;
                 case HOME:
                     drawableResId = R.drawable.ic_sysbar_rotate_button;
@@ -166,7 +167,7 @@ public class BlinkView extends LinearLayout {
             );
             android.util.Log.e("ANAS","weightSum="+weightSum);
             lp.weight = weightSum;
-            lp.gravity = Gravity.BOTTOM;
+            lp.gravity = Gravity.CENTER_VERTICAL;
             addView(imageView, lp);
         }
     }
@@ -180,29 +181,29 @@ public class BlinkView extends LinearLayout {
     }
 
     private void drawBlinkBlob(Canvas canvas, float offsetX, float offsetY) {
-        final float blinkOffsetX = offsetX;// * 0.5f;
-        final float blinkOffsetY = offsetY * 1.0f;
-        final float qsOffsetX = offsetX * 0.25f;
-        final float qsOffsetY = offsetY * 0.3f;
-        final int threshold = (int) Math.abs(qsOffsetX / (mBlinkHalfWidth / 4) * 100);
-
-        final Path mBlinkPath = new Path();
-
-        float fourthWidth = mBlinkWidth / 4;
-        mBlinkPath.moveTo(-mBlinkHalfWidth, mBlinkHeight);
-        mBlinkPath.cubicTo(-fourthWidth + blinkOffsetX, mBlinkHeight, -fourthWidth + blinkOffsetX, blinkOffsetY, blinkOffsetX, blinkOffsetY);
-        mBlinkPath.cubicTo(fourthWidth + blinkOffsetX, blinkOffsetY, fourthWidth + blinkOffsetX, mBlinkHeight, mBlinkHalfWidth, mBlinkHeight);
-        mBlinkPath.close();
-
-        int alpha = (int) clamp(100 - threshold, 0, 100);
-        int N = getChildCount();
-        for (int i = 0; i < N; i++) {
-            View child = getChildAt(i);
-            child.setAlpha(alpha);
-        }
-
-        canvas.clipPath(mBlinkPath);
-        canvas.drawPath(mBlinkPath, mBlinkBackground);
+//        final float blinkOffsetX = offsetX * 0.3f;
+//        final float blinkOffsetY = offsetY * 1.0f;
+//        final float qsOffsetX = offsetX * 0.25f;
+//        final float qsOffsetY = offsetY * 0.3f;
+//        final int threshold = (int) Math.abs(qsOffsetX / (mBlinkHalfWidth / 4) * 100);
+//
+//        final Path mBlinkPath = new Path();
+//
+//        float fourthWidth = mBlinkWidth / 4;
+//        mBlinkPath.moveTo(-mBlinkHalfWidth, mBlinkHeight);
+//        mBlinkPath.cubicTo(-fourthWidth + blinkOffsetX, mBlinkHeight, -fourthWidth + blinkOffsetX, blinkOffsetY, blinkOffsetX, blinkOffsetY);
+//        mBlinkPath.cubicTo(fourthWidth + blinkOffsetX, blinkOffsetY, fourthWidth + blinkOffsetX, mBlinkHeight, mBlinkHalfWidth, mBlinkHeight);
+//        mBlinkPath.close();
+//
+//        int alpha = (int) clamp(100 - threshold, 0, 100);
+//        int N = getChildCount();
+//        for (int i = 0; i < N; i++) {
+//            View child = getChildAt(i);
+//            child.setAlpha(alpha);
+//        }
+//
+//        canvas.clipPath(mBlinkPath);
+//        canvas.drawPath(mBlinkPath, mBlinkBackground);
 
 //        for (int i = 0; mBlinkAssistantColorsResId.length > i; i++) {
 //            Paint dotPaint = new Paint();
@@ -227,10 +228,36 @@ public class BlinkView extends LinearLayout {
             return;
         }
 
-        int state = canvas.save();
+
+
+        final float blinkOffsetX = mOffsetX * 0.3f;
+        final float blinkOffsetY = mOffsetY * 1.0f;
+        final float qsOffsetX = mOffsetX * 0.25f;
+        final float qsOffsetY = mOffsetY * 0.3f;
+        final int threshold = (int) Math.abs(qsOffsetX / (mBlinkHalfWidth / 4) * 100);
+
+        final Path mBlinkPath = new Path();
+
+        float fourthWidth = mBlinkWidth / 4;
+        mBlinkPath.moveTo(-mBlinkHalfWidth, mBlinkHeight);
+        mBlinkPath.cubicTo(-fourthWidth + blinkOffsetX, mBlinkHeight, -fourthWidth + blinkOffsetX, blinkOffsetY, blinkOffsetX, blinkOffsetY);
+        mBlinkPath.cubicTo(fourthWidth + blinkOffsetX, blinkOffsetY, fourthWidth + blinkOffsetX, mBlinkHeight, mBlinkHalfWidth, mBlinkHeight);
+        mBlinkPath.close();
+
+        int alpha = (int) clamp(100 - threshold, 0, 100);
+        int N = getChildCount();
+        for (int i = 0; i < N; i++) {
+            View child = getChildAt(i);
+            child.setAlpha(alpha);
+        }
+
+
+
         canvas.translate(mViewWidth / 2, 0);
-        drawBlinkBlob(canvas, mOffsetX, mOffsetY);
-        canvas.restoreToCount(state);
+        canvas.clipPath(mBlinkPath);
+        canvas.drawPath(mBlinkPath, mBlinkBackground);
+        canvas.translate(-(mViewWidth / 2), 0);
+
     }
 
     public boolean onTouchEvent(MotionEvent event) {
