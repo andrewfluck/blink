@@ -135,9 +135,9 @@ public class BlinkView extends LinearLayout {
         super.onAttachedToWindow();
         setPadding((int)  mBlinkHalfWidth, 0, (int) mBlinkHalfWidth, 0);
 
+        mActions.add(Actions.BACK);
         mActions.add(Actions.HOME);
         mActions.add(Actions.RECENTS);
-        mActions.add(Actions.BACK);
 
         int N = mActions.size();
         float weightSum = 1f;// / N;
@@ -153,10 +153,10 @@ public class BlinkView extends LinearLayout {
                     drawableResId = R.drawable.ic_sysbar_back_button;
                     break;
                 case RECENTS:
-                    drawableResId = R.drawable.ic_sysbar_home_button;
+                    drawableResId = R.drawable.ic_sysbar_rotate_button;
                     break;
                 case HOME:
-                    drawableResId = R.drawable.ic_sysbar_rotate_button;
+                    drawableResId = R.drawable.ic_sysbar_home_button;
                     break;
             }
 
